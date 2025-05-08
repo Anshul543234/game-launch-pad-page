@@ -1,8 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import QuestionCard from '@/components/QuestionCard';
+import Timer from '@/components/Timer';
+import { toast } from "@/components/ui/sonner";
 
 // Extended question data with multiple questions
 const quizQuestions = [
@@ -92,12 +94,23 @@ const QuestionPage = () => {
     }
   };
 
+  const handleTimeUp = useCallback(() => {
+    toast("Time's up!", {
+      description: "Moving to the next question...",
+      position: "top-center",
+    });
+    handleNext();
+  }, [currentQuestionIndex]);
+
   const handleRestart = () => {
     setCurrentQuestionIndex(0);
     setSelectedAnswer(undefined);
     setScore(0);
     setShowResults(false);
   };
+
+  // 30 seconds per question
+  const questionTime = 30;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -119,6 +132,13 @@ const QuestionPage = () => {
                     style={{ width: `${progress}%` }}
                   ></div>
                 </div>
+              </div>
+              
+              <div className="mb-4">
+                <Timer 
+                  initialTime={questionTime} 
+                  onTimeUp={handleTimeUp} 
+                />
               </div>
               
               <QuestionCard
