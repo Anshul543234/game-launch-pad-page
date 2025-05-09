@@ -1,5 +1,5 @@
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import QuestionCard from '@/components/QuestionCard';
@@ -65,15 +65,31 @@ const quizQuestions = [
   },
 ];
 
+// Function to shuffle array using Fisher-Yates algorithm
+const shuffleArray = (array: typeof quizQuestions) => {
+  const shuffled = [...array];
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+  }
+  return shuffled;
+};
+
 const QuestionPage = () => {
+  const [questions, setQuestions] = useState<typeof quizQuestions>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string>();
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
   
-  const currentQuestion = quizQuestions[currentQuestionIndex];
-  const totalQuestions = quizQuestions.length;
-  const progress = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+  // Initialize with shuffled questions
+  useEffect(() => {
+    setQuestions(shuffleArray(quizQuestions));
+  }, []);
+  
+  const currentQuestion = questions[currentQuestionIndex] || { question: '', options: [], correctAnswer: '' };
+  const totalQuestions = questions.length;
+  const progress = totalQuestions ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
   
   const handleAnswer = (answerId: string) => {
     setSelectedAnswer(answerId);
@@ -103,6 +119,7 @@ const QuestionPage = () => {
   }, [currentQuestionIndex]);
 
   const handleRestart = () => {
+    setQuestions(shuffleArray(quizQuestions));
     setCurrentQuestionIndex(0);
     setSelectedAnswer(undefined);
     setScore(0);
@@ -111,6 +128,19 @@ const QuestionPage = () => {
 
   // 30 seconds per question
   const questionTime = 30;
+
+  // Don't render until questions are loaded
+  if (questions.length === 0) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Navbar />
+        <main className="flex-grow flex items-center justify-center bg-gradient-to-b from-white to-purple-50 py-12 px-4">
+          <div className="text-center">Loading questions...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
