@@ -5,6 +5,7 @@ import Footer from '@/components/Footer';
 import QuestionCard from '@/components/QuestionCard';
 import Timer from '@/components/Timer';
 import { toast } from "@/components/ui/sonner";
+import { Badge } from "@/components/ui/badge";
 
 // Extended question data with multiple questions
 const quizQuestions = [
@@ -18,6 +19,7 @@ const quizQuestions = [
       { id: 'd', text: 'Saturn' },
     ],
     correctAnswer: 'b',
+    points: 10,
   },
   {
     id: '2',
@@ -29,6 +31,7 @@ const quizQuestions = [
       { id: 'd', text: 'Mark Twain' },
     ],
     correctAnswer: 'b',
+    points: 10,
   },
   {
     id: '3',
@@ -40,6 +43,7 @@ const quizQuestions = [
       { id: 'd', text: 'Ag' },
     ],
     correctAnswer: 'c',
+    points: 10,
   },
   {
     id: '4',
@@ -51,6 +55,7 @@ const quizQuestions = [
       { id: 'd', text: 'Japan' },
     ],
     correctAnswer: 'd',
+    points: 10,
   },
   {
     id: '5',
@@ -62,6 +67,7 @@ const quizQuestions = [
       { id: 'd', text: '1950' },
     ],
     correctAnswer: 'b',
+    points: 10,
   },
 ];
 
@@ -78,28 +84,41 @@ const shuffleArray = (array: typeof quizQuestions) => {
 const QuestionPage = () => {
   const [questions, setQuestions] = useState<typeof quizQuestions>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<string>();
+  const [selectedAnswer, setSelectedAnswer] = useState<string | undefined>(undefined);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [answerSubmitted, setAnswerSubmitted] = useState(false);
   
   // Initialize with shuffled questions
   useEffect(() => {
     setQuestions(shuffleArray(quizQuestions));
   }, []);
   
-  const currentQuestion = questions[currentQuestionIndex] || { question: '', options: [], correctAnswer: '' };
+  const currentQuestion = questions[currentQuestionIndex] || { question: '', options: [], correctAnswer: '', points: 0 };
   const totalQuestions = questions.length;
   const progress = totalQuestions ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
   
   const handleAnswer = (answerId: string) => {
-    setSelectedAnswer(answerId);
+    if (!answerSubmitted) {
+      setSelectedAnswer(answerId);
+    }
   };
   
   const handleNext = () => {
     // Check if answer is correct and update score
     if (selectedAnswer === currentQuestion.correctAnswer) {
-      setScore(score + 1);
+      const newScore = score + currentQuestion.points;
+      setScore(newScore);
+      toast.success(`Correct! +${currentQuestion.points} points`, {
+        description: `Your score is now ${newScore}`,
+      });
+    } else {
+      toast.error("Incorrect answer", {
+        description: "No points awarded",
+      });
     }
+    
+    setAnswerSubmitted(false);
     
     // Move to next question or show results
     if (currentQuestionIndex < totalQuestions - 1) {
@@ -124,6 +143,23 @@ const QuestionPage = () => {
     setSelectedAnswer(undefined);
     setScore(0);
     setShowResults(false);
+    setAnswerSubmitted(false);
+  };
+
+  const handleSubmitAnswer = () => {
+    setAnswerSubmitted(true);
+    
+    if (selectedAnswer === currentQuestion.correctAnswer) {
+      const newScore = score + currentQuestion.points;
+      setScore(newScore);
+      toast.success(`Correct! +${currentQuestion.points} points`, {
+        description: `Your score is now ${newScore}`,
+      });
+    } else {
+      toast.error("Incorrect answer", {
+        description: "No points awarded",
+      });
+    }
   };
 
   // 30 seconds per question
@@ -154,7 +190,11 @@ const QuestionPage = () => {
                   <span className="text-sm font-medium text-purple-600">
                     Question {currentQuestionIndex + 1}/{totalQuestions}
                   </span>
-                  <span className="text-sm font-medium">Score: {score}</span>
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-200">
+                      Score: {score}
+                    </Badge>
+                  </div>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2">
                   <div 
@@ -177,13 +217,16 @@ const QuestionPage = () => {
                 onAnswer={handleAnswer}
                 onNext={handleNext}
                 selectedAnswer={selectedAnswer}
+                answerSubmitted={answerSubmitted}
+                onSubmitAnswer={handleSubmitAnswer}
+                possiblePoints={currentQuestion.points}
               />
             </>
           ) : (
             <div className="bg-white p-8 rounded-lg shadow-lg text-center">
               <h2 className="text-2xl font-bold mb-4">Quiz Completed!</h2>
               <p className="text-lg mb-6">
-                Your score: <span className="font-bold text-purple-600">{score}</span> out of {totalQuestions}
+                Your score: <span className="font-bold text-purple-600">{score}</span> out of {totalQuestions * 10}
               </p>
               <button
                 onClick={handleRestart}

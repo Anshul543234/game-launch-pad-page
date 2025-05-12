@@ -4,7 +4,8 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Check, ChevronRight } from 'lucide-react';
+import { Check, ChevronRight, TimerIcon } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
 interface AnswerOption {
   id: string;
@@ -17,6 +18,9 @@ interface QuestionCardProps {
   onAnswer: (answerId: string) => void;
   onNext: () => void;
   selectedAnswer?: string;
+  answerSubmitted?: boolean;
+  onSubmitAnswer: () => void;
+  possiblePoints: number;
 }
 
 const QuestionCard = ({
@@ -25,6 +29,9 @@ const QuestionCard = ({
   onAnswer,
   onNext,
   selectedAnswer,
+  answerSubmitted = false,
+  onSubmitAnswer,
+  possiblePoints,
 }: QuestionCardProps) => {
   const handleValueChange = (value: string) => {
     onAnswer(value);
@@ -33,7 +40,12 @@ const QuestionCard = ({
   return (
     <Card className="w-full max-w-3xl shadow-lg">
       <CardHeader className="bg-purple-50 border-b">
-        <CardTitle className="text-xl font-medium text-center">{question}</CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="text-xl font-medium">{question}</CardTitle>
+          <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+            <TimerIcon className="h-3 w-3 mr-1" /> {possiblePoints} pts
+          </Badge>
+        </div>
       </CardHeader>
       <CardContent className="pt-6">
         <RadioGroup
@@ -48,7 +60,7 @@ const QuestionCard = ({
                 selectedAnswer === option.id ? 'bg-purple-50 border-purple-300' : ''
               }`}
             >
-              <RadioGroupItem value={option.id} id={option.id} />
+              <RadioGroupItem value={option.id} id={option.id} disabled={answerSubmitted} />
               <Label
                 htmlFor={option.id}
                 className="flex flex-1 items-center justify-between font-normal"
@@ -62,10 +74,24 @@ const QuestionCard = ({
           ))}
         </RadioGroup>
       </CardContent>
-      <CardFooter className="flex justify-end border-t py-4 mt-4">
+      <CardFooter className="flex justify-between border-t py-4 mt-4">
+        {!answerSubmitted ? (
+          <Button
+            onClick={onSubmitAnswer}
+            disabled={!selectedAnswer}
+            className="bg-green-600 hover:bg-green-700"
+          >
+            Submit Answer
+          </Button>
+        ) : (
+          <div className="text-sm font-medium text-gray-500">
+            Answer submitted
+          </div>
+        )}
+        
         <Button
           onClick={onNext}
-          disabled={!selectedAnswer}
+          disabled={!answerSubmitted}
           className="bg-purple-600 hover:bg-purple-700"
         >
           Next Question <ChevronRight className="ml-1 h-4 w-4" />
