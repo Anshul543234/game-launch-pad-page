@@ -35,6 +35,8 @@ const QuestionCard = ({
 }: QuestionCardProps) => {
   const handleValueChange = (value: string) => {
     onAnswer(value);
+    // Automatically submit the answer when an option is selected
+    onSubmitAnswer();
   };
 
   return (
@@ -76,13 +78,9 @@ const QuestionCard = ({
       </CardContent>
       <CardFooter className="flex justify-between border-t py-4 mt-4">
         {!answerSubmitted ? (
-          <Button
-            onClick={onSubmitAnswer}
-            disabled={!selectedAnswer}
-            className="bg-green-600 hover:bg-green-700"
-          >
-            Submit Answer
-          </Button>
+          <div className="text-sm font-medium text-gray-500">
+            Select an option to submit
+          </div>
         ) : (
           <div className="text-sm font-medium text-gray-500">
             Answer submitted
