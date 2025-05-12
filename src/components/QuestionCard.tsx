@@ -35,8 +35,7 @@ const QuestionCard = ({
 }: QuestionCardProps) => {
   const handleValueChange = (value: string) => {
     onAnswer(value);
-    // Automatically submit the answer when an option is selected
-    onSubmitAnswer();
+    // Remove auto-submission - answer will only be submitted when user clicks "Next"
   };
 
   return (
@@ -77,19 +76,17 @@ const QuestionCard = ({
         </RadioGroup>
       </CardContent>
       <CardFooter className="flex justify-between border-t py-4 mt-4">
-        {!answerSubmitted ? (
-          <div className="text-sm font-medium text-gray-500">
-            Select an option to submit
-          </div>
-        ) : (
-          <div className="text-sm font-medium text-gray-500">
-            Answer submitted
-          </div>
-        )}
+        <div className="text-sm font-medium text-gray-500">
+          {!answerSubmitted ? (
+            "Select an option and click Next to submit"
+          ) : (
+            "Answer submitted"
+          )}
+        </div>
         
         <Button
-          onClick={onNext}
-          disabled={!answerSubmitted}
+          onClick={selectedAnswer ? onSubmitAnswer : undefined}
+          disabled={!selectedAnswer || answerSubmitted}
           className="bg-purple-600 hover:bg-purple-700"
         >
           Next Question <ChevronRight className="ml-1 h-4 w-4" />

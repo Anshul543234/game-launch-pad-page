@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -104,26 +103,13 @@ const QuestionPage = () => {
     }
   };
   
+  // Modified to just move to the next question, submission is now handled by handleSubmitAnswer
   const handleNext = () => {
-    // Check if answer is correct and update score
-    if (selectedAnswer === currentQuestion.correctAnswer) {
-      const newScore = score + currentQuestion.points;
-      setScore(newScore);
-      toast.success(`Correct! +${currentQuestion.points} points`, {
-        description: `Your score is now ${newScore}`,
-      });
-    } else {
-      toast.error("Incorrect answer", {
-        description: "No points awarded",
-      });
-    }
-    
-    setAnswerSubmitted(false);
-    
     // Move to next question or show results
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
       setSelectedAnswer(undefined); // Explicitly reset selected answer
+      setAnswerSubmitted(false);
     } else {
       setShowResults(true);
     }
@@ -134,8 +120,13 @@ const QuestionPage = () => {
       description: "Moving to the next question...",
       position: "top-center",
     });
+    
+    // When time is up, submit whatever answer is selected (if any) and move to next question
+    if (selectedAnswer) {
+      handleSubmitAnswer();
+    }
     handleNext();
-  }, [currentQuestionIndex]);
+  }, [currentQuestionIndex, selectedAnswer]);
 
   const handleRestart = () => {
     setQuestions(shuffleArray(quizQuestions));
@@ -149,6 +140,7 @@ const QuestionPage = () => {
   const handleSubmitAnswer = () => {
     setAnswerSubmitted(true);
     
+    // Check if answer is correct and update score
     if (selectedAnswer === currentQuestion.correctAnswer) {
       const newScore = score + currentQuestion.points;
       setScore(newScore);
@@ -160,6 +152,9 @@ const QuestionPage = () => {
         description: "No points awarded",
       });
     }
+    
+    // Automatically proceed to next question after submission
+    handleNext();
   };
 
   // 30 seconds per question
