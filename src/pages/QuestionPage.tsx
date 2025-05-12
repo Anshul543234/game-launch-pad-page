@@ -123,7 +123,7 @@ const QuestionPage = () => {
     // Move to next question or show results
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(undefined);
+      setSelectedAnswer(undefined); // Explicitly reset selected answer
     } else {
       setShowResults(true);
     }
@@ -140,7 +140,7 @@ const QuestionPage = () => {
   const handleRestart = () => {
     setQuestions(shuffleArray(quizQuestions));
     setCurrentQuestionIndex(0);
-    setSelectedAnswer(undefined);
+    setSelectedAnswer(undefined); // Explicitly reset selected answer
     setScore(0);
     setShowResults(false);
     setAnswerSubmitted(false);
