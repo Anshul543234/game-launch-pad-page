@@ -5,6 +5,8 @@ import QuestionCard from '@/components/QuestionCard';
 import Timer from '@/components/Timer';
 import { toast } from "@/components/ui/sonner";
 import { Badge } from "@/components/ui/badge";
+import { saveQuizAttempt } from '@/lib/services/userProfileService';
+import { useNavigate } from 'react-router-dom';
 
 // Extended question data with multiple questions
 const quizQuestions = [
@@ -81,13 +83,25 @@ const shuffleArray = (array: typeof quizQuestions) => {
 };
 
 const QuestionPage = () => {
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState<typeof quizQuestions>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | undefined>(undefined);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
+  const [startTime] = useState(new Date());
+  const [isSaving, setIsSaving] = useState(false);
+  const [shouldSaveResults, setShouldSaveResults] = useState(false);
   
+  // Effect to handle saving results when shouldSaveResults becomes true
+  useEffect(() => {
+    if (shouldSaveResults) {
+      saveQuizResults();
+      setShouldSaveResults(false);
+    }
+  }, [shouldSaveResults, score]); // Re-run when score changes
+
   // Initialize with shuffled questions
   useEffect(() => {
     setQuestions(shuffleArray(quizQuestions));
@@ -103,35 +117,18 @@ const QuestionPage = () => {
     }
   };
   
-  // Modified to just move to the next question, submission is now handled by handleSubmitAnswer
   const handleNext = () => {
-    // Move to next question or show results
     if (currentQuestionIndex < totalQuestions - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(undefined); // Explicitly reset selected answer
+      setSelectedAnswer(undefined);
       setAnswerSubmitted(false);
-    } else {
-      setShowResults(true);
     }
   };
-
-  const handleTimeUp = useCallback(() => {
-    toast("Time's up!", {
-      description: "Moving to the next question...",
-      position: "top-center",
-    });
-    
-    // When time is up, submit whatever answer is selected (if any) and move to next question
-    if (selectedAnswer) {
-      handleSubmitAnswer();
-    }
-    handleNext();
-  }, [currentQuestionIndex, selectedAnswer]);
 
   const handleRestart = () => {
     setQuestions(shuffleArray(quizQuestions));
     setCurrentQuestionIndex(0);
-    setSelectedAnswer(undefined); // Explicitly reset selected answer
+    setSelectedAnswer(undefined);
     setScore(0);
     setShowResults(false);
     setAnswerSubmitted(false);
@@ -140,21 +137,78 @@ const QuestionPage = () => {
   const handleSubmitAnswer = () => {
     setAnswerSubmitted(true);
     
-    // Check if answer is correct and update score
     if (selectedAnswer === currentQuestion.correctAnswer) {
       const newScore = score + currentQuestion.points;
       setScore(newScore);
-      toast.success(`Correct! +${currentQuestion.points} points`, {
-        description: `Your score is now ${newScore}`,
-      });
+      
+      if (currentQuestionIndex === totalQuestions - 1) {
+        // For the last question, wait for score update then save
+        setShowResults(true);
+        setShouldSaveResults(true);
+      } else {
+        handleNext();
+      }
     } else {
-      toast.error("Incorrect answer", {
-        description: "No points awarded",
-      });
+      if (currentQuestionIndex === totalQuestions - 1) {
+        // Even for incorrect answer on last question, show results
+        setShowResults(true);
+        setShouldSaveResults(true);
+      } else {
+        handleNext();
+      }
     }
+  };
+
+  const handleTimeUp = useCallback(() => {
+    if (selectedAnswer) {
+      handleSubmitAnswer();
+    } else {
+      if (currentQuestionIndex === totalQuestions - 1) {
+        setShowResults(true);
+        setShouldSaveResults(true);
+      } else {
+        handleNext();
+      }
+    }
+  }, [currentQuestionIndex, selectedAnswer, handleSubmitAnswer, handleNext]);
+
+  const saveQuizResults = async () => {
+    const endTime = new Date();
+    const timeTaken = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
     
-    // Automatically proceed to next question after submission
-    handleNext();
+    // Calculate correct answers and percentage
+    const correctAnswers = Math.floor(score / 10);
+    const percentageScore = (correctAnswers / totalQuestions) * 100;
+    const actualTotalQuestions = quizQuestions.length;
+    
+    const quizAttempt = {
+      quizId: 'gk1',
+      quizName: "General Knowledge Quiz",
+      category: "General Knowledge",
+      score: score === actualTotalQuestions * 10 ? 100 : percentageScore,
+      totalQuestions: actualTotalQuestions,
+      date: new Date().toISOString(),
+      timeTaken: timeTaken,
+      correctAnswers: correctAnswers
+    };
+
+    try {
+      setIsSaving(true);
+      const savedProfile = await saveQuizAttempt('1', quizAttempt);
+      
+      toast.success("Quiz results saved!", {
+        description: `You got ${correctAnswers} out of ${actualTotalQuestions} correct (${quizAttempt.score}%)`,
+      });
+      setTimeout(() => {
+        navigate('/profile');
+      }, 1500);
+    } catch (error) {
+      toast.error("Failed to save quiz results", {
+        description: "Please try again later.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // 30 seconds per question
@@ -221,14 +275,32 @@ const QuestionPage = () => {
             <div className="bg-white p-8 rounded-lg shadow-lg text-center">
               <h2 className="text-2xl font-bold mb-4">Quiz Completed!</h2>
               <p className="text-lg mb-6">
-                Your score: <span className="font-bold text-purple-600">{score}</span> out of {totalQuestions * 10}
+                Your score: <span className="font-bold text-purple-600">
+                  {Math.floor((score / (totalQuestions * 10)) * 100)}%
+                </span>
+                <br />
+                <span className="text-sm text-gray-600">
+                  ({Math.floor(score / 10)} out of {totalQuestions} correct)
+                </span>
               </p>
-              <button
-                onClick={handleRestart}
-                className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
-              >
-                Try Again
-              </button>
+              <div className="space-y-4">
+                <button
+                  onClick={handleRestart}
+                  className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors mr-4"
+                  disabled={isSaving}
+                >
+                  Try Again
+                </button>
+                {isSaving ? (
+                  <div className="text-gray-600">
+                    Saving your results...
+                  </div>
+                ) : (
+                  <div className="text-sm text-gray-500">
+                    Your results will be saved to your profile
+                  </div>
+                )}
+              </div>
             </div>
           )}
         </div>

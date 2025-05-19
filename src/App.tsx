@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
@@ -11,6 +10,7 @@ import QuestionPage from "./pages/QuestionPage";
 import CategoriesPage from "./pages/CategoriesPage";
 import LeaderboardPage from "./pages/LeaderboardPage";
 import AboutPage from "./pages/AboutPage";
+import ProfilePage from "./pages/ProfilePage";
 
 const queryClient = new QueryClient();
 
@@ -28,6 +28,7 @@ const App: React.FC = () => {
               <Route path="/categories" element={<CategoriesPage />} />
               <Route path="/leaderboard" element={<LeaderboardPage />} />
               <Route path="/about" element={<AboutPage />} />
+              <Route path="/profile" element={<ProfilePage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
