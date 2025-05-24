@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/sonner";
 import { Badge } from "@/components/ui/badge";
 import { saveQuizAttempt } from '@/lib/services/userProfileService';
 import { useNavigate } from 'react-router-dom';
+import { playSound } from '@/lib/sounds';
 
 // Extended question data with multiple questions
 const quizQuestions = [
@@ -137,7 +138,10 @@ const QuestionPage = () => {
   const handleSubmitAnswer = () => {
     setAnswerSubmitted(true);
     
-    if (selectedAnswer === currentQuestion.correctAnswer) {
+    const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
+    playSound(isCorrect);
+    
+    if (isCorrect) {
       const newScore = score + currentQuestion.points;
       setScore(newScore);
       
