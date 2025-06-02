@@ -149,18 +149,16 @@ const QuestionPage = () => {
         // For the last question, wait for score update then save
         setShowResults(true);
         setShouldSaveResults(true);
-      } else {
-        handleNext();
       }
     } else {
       if (currentQuestionIndex === totalQuestions - 1) {
         // Even for incorrect answer on last question, show results
         setShowResults(true);
         setShouldSaveResults(true);
-      } else {
-        handleNext();
       }
     }
+    
+    // Don't automatically proceed to next question - user will click Continue
   };
 
   const handleTimeUp = useCallback(() => {
@@ -273,6 +271,7 @@ const QuestionPage = () => {
                 answerSubmitted={answerSubmitted}
                 onSubmitAnswer={handleSubmitAnswer}
                 possiblePoints={currentQuestion.points}
+                correctAnswer={currentQuestion.correctAnswer}
               />
             </>
           ) : (
