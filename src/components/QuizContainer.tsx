@@ -1,6 +1,6 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import QuestionCard from '@/components/QuestionCard';
+import QuestionTransition from '@/components/QuestionTransition';
 import Timer from '@/components/Timer';
 import QuizProgress from '@/components/QuizProgress';
 import QuizResults from '@/components/QuizResults';
@@ -94,6 +94,7 @@ const QuizContainer = () => {
   const [startTime] = useState(new Date());
   const [isSaving, setIsSaving] = useState(false);
   const [shouldSaveResults, setShouldSaveResults] = useState(false);
+  const [isTransitioning, setIsTransitioning] = useState(false);
   
   // Effect to handle saving results when shouldSaveResults becomes true
   useEffect(() => {
@@ -119,9 +120,14 @@ const QuizContainer = () => {
   
   const handleNext = () => {
     if (currentQuestionIndex < totalQuestions - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-      setSelectedAnswer(undefined);
-      setAnswerSubmitted(false);
+      setIsTransitioning(true);
+      
+      setTimeout(() => {
+        setCurrentQuestionIndex(currentQuestionIndex + 1);
+        setSelectedAnswer(undefined);
+        setAnswerSubmitted(false);
+        setIsTransitioning(false);
+      }, 300);
     }
   };
 
@@ -241,17 +247,19 @@ const QuizContainer = () => {
         />
       </div>
       
-      <QuestionCard
-        question={currentQuestion.question}
-        options={currentQuestion.options}
-        onAnswer={handleAnswer}
-        onNext={handleNext}
-        selectedAnswer={selectedAnswer}
-        answerSubmitted={answerSubmitted}
-        onSubmitAnswer={handleSubmitAnswer}
-        possiblePoints={currentQuestion.points}
-        correctAnswer={currentQuestion.correctAnswer}
-      />
+      <QuestionTransition isTransitioning={isTransitioning}>
+        <QuestionCard
+          question={currentQuestion.question}
+          options={currentQuestion.options}
+          onAnswer={handleAnswer}
+          onNext={handleNext}
+          selectedAnswer={selectedAnswer}
+          answerSubmitted={answerSubmitted}
+          onSubmitAnswer={handleSubmitAnswer}
+          possiblePoints={currentQuestion.points}
+          correctAnswer={currentQuestion.correctAnswer}
+        />
+      </QuestionTransition>
     </div>
   );
 };
