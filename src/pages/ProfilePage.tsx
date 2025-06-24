@@ -1,8 +1,12 @@
+
 import { useEffect, useState } from 'react';
 import { UserProfile, QuizAttempt } from '../lib/types/user';
 import { getUserProfile } from '../lib/services/userProfileService';
 import { Card } from '../components/ui/card';
 import { Progress } from '../components/ui/progress';
+import { Button } from '../components/ui/button';
+import { ArrowLeft } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const ProfilePage = () => {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -75,6 +79,16 @@ const ProfilePage = () => {
 
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
+      {/* Back to Home Button */}
+      <div className="mb-6">
+        <Link to="/">
+          <Button variant="outline" className="flex items-center gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            Back to Home
+          </Button>
+        </Link>
+      </div>
+
       {/* Profile Header */}
       <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
         <div className="flex items-center space-x-6">
@@ -197,4 +211,4 @@ const ProfilePage = () => {
   );
 };
 
-export default ProfilePage; 
+export default ProfilePage;
