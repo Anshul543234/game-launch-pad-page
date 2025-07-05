@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useEffect } from 'react';
 import QuestionCard from '@/components/QuestionCard';
 import QuestionTransition from '@/components/QuestionTransition';
@@ -54,7 +55,7 @@ const QuizContainer = () => {
     setQuestions(shuffleArray(difficultyQuestions));
   };
   
-  const currentQuestion = questions[currentQuestionIndex] || { question: '', options: [], correctAnswer: '', points: 0 };
+  const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
   
   const handleAnswer = (answerId: string) => {
@@ -99,6 +100,8 @@ const QuizContainer = () => {
   };
 
   const handleSubmitAnswer = () => {
+    if (!currentQuestion) return;
+    
     setAnswerSubmitted(true);
     
     const isCorrect = selectedAnswer === currentQuestion.correctAnswer;
@@ -113,7 +116,7 @@ const QuizContainer = () => {
         setShouldSaveResults(true);
       }
     } else {
-      // Track wrong answer
+      // Track wrong answer - now we're sure currentQuestion is a valid QuizQuestion
       if (selectedAnswer) {
         const wrongAnswer = {
           question: currentQuestion,
@@ -209,6 +212,11 @@ const QuizContainer = () => {
         isSaving={isSaving}
       />
     );
+  }
+
+  // Don't render if no current question
+  if (!currentQuestion) {
+    return <div className="text-center">Loading question...</div>;
   }
 
   return (
