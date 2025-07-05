@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import QuestionCard from '@/components/QuestionCard';
 import QuestionTransition from '@/components/QuestionTransition';
@@ -178,9 +177,6 @@ const QuizContainer = () => {
       toast.success("Quiz results saved!", {
         description: `You got ${correctAnswers} out of ${totalQuestions} correct (${quizAttempt.score}%)`,
       });
-      setTimeout(() => {
-        navigate('/profile');
-      }, 1500);
     } catch (error) {
       toast.error("Failed to save quiz results", {
         description: "Please try again later.",
