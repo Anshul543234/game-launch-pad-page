@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { Badge } from "@/components/ui/badge";
+import { Link } from 'react-router-dom';
 
 interface QuizResultsProps {
   score: number;
@@ -12,6 +13,7 @@ interface QuizResultsProps {
 const QuizResults = ({ score, totalQuestions, onRestart, isSaving }: QuizResultsProps) => {
   const percentage = Math.floor((score / (totalQuestions * 10)) * 100);
   const correctAnswers = Math.floor(score / 10);
+  const wrongAnswers = totalQuestions - correctAnswers;
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg text-center">
@@ -24,13 +26,22 @@ const QuizResults = ({ score, totalQuestions, onRestart, isSaving }: QuizResults
         </span>
       </p>
       <div className="space-y-4">
-        <button
-          onClick={onRestart}
-          className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors mr-4"
-          disabled={isSaving}
-        >
-          Try Again
-        </button>
+        <div className="flex justify-center gap-4">
+          <button
+            onClick={onRestart}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
+            disabled={isSaving}
+          >
+            Try Again
+          </button>
+          {wrongAnswers > 0 && (
+            <Link to="/review">
+              <button className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-colors">
+                Review Wrong Answers ({wrongAnswers})
+              </button>
+            </Link>
+          )}
+        </div>
         {isSaving ? (
           <div className="text-gray-600">
             Saving your results...

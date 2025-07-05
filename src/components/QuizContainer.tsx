@@ -1,4 +1,3 @@
-
 import React, { useState, useCallback, useEffect } from 'react';
 import QuestionCard from '@/components/QuestionCard';
 import QuestionTransition from '@/components/QuestionTransition';
@@ -35,6 +34,11 @@ const QuizContainer = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [shouldSaveResults, setShouldSaveResults] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [wrongAnswers, setWrongAnswers] = useState<Array<{
+    question: QuizQuestion;
+    selectedAnswer: string;
+    correctAnswer: string;
+  }>>([]);
   
   // Effect to handle saving results when shouldSaveResults becomes true
   useEffect(() => {
@@ -109,6 +113,16 @@ const QuizContainer = () => {
         setShouldSaveResults(true);
       }
     } else {
+      // Track wrong answer
+      if (selectedAnswer) {
+        const wrongAnswer = {
+          question: currentQuestion,
+          selectedAnswer: selectedAnswer,
+          correctAnswer: currentQuestion.correctAnswer
+        };
+        setWrongAnswers(prev => [...prev, wrongAnswer]);
+      }
+      
       if (currentQuestionIndex === totalQuestions - 1) {
         setShowResults(true);
         setShouldSaveResults(true);
@@ -154,6 +168,9 @@ const QuizContainer = () => {
     try {
       setIsSaving(true);
       const savedProfile = await saveQuizAttempt('1', quizAttempt);
+      
+      // Store wrong answers in localStorage for review
+      localStorage.setItem('last_quiz_wrong_answers', JSON.stringify(wrongAnswers));
       
       toast.success("Quiz results saved!", {
         description: `You got ${correctAnswers} out of ${totalQuestions} correct (${quizAttempt.score}%)`,
