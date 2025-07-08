@@ -1,24 +1,51 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table';
-import { Award, ChevronUp } from 'lucide-react';
-
-const leaderboardData = [
-  { rank: 1, name: 'Alex Johnson', score: 950, quizzes: 12, accuracy: 94 },
-  { rank: 2, name: 'Morgan Smith', score: 920, quizzes: 15, accuracy: 91 },
-  { rank: 3, name: 'Taylor Brown', score: 880, quizzes: 11, accuracy: 89 },
-  { rank: 4, name: 'Jordan Lee', score: 845, quizzes: 14, accuracy: 87 },
-  { rank: 5, name: 'Casey Wilson', score: 820, quizzes: 10, accuracy: 88 },
-  { rank: 6, name: 'Riley Garcia', score: 790, quizzes: 12, accuracy: 85 },
-  { rank: 7, name: 'Quinn Murphy', score: 760, quizzes: 9, accuracy: 86 },
-  { rank: 8, name: 'Jamie Davis', score: 740, quizzes: 8, accuracy: 84 },
-  { rank: 9, name: 'Avery Miller', score: 700, quizzes: 7, accuracy: 83 },
-  { rank: 10, name: 'Dakota Chen', score: 680, quizzes: 8, accuracy: 81 }
-];
+import { Award, ChevronUp, Trophy, Medal, Crown } from 'lucide-react';
+import { getTopUsers, initializeSampleData, type LeaderboardEntry } from '@/lib/services/leaderboardService';
 
 const LeaderboardPage = () => {
+  const [leaderboardData, setLeaderboardData] = useState<LeaderboardEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadLeaderboard = async () => {
+      try {
+        // Initialize sample data if needed
+        initializeSampleData();
+        
+        // Get top 10 users
+        const topUsers = getTopUsers(10);
+        setLeaderboardData(topUsers);
+      } catch (error) {
+        console.error('Failed to load leaderboard:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadLeaderboard();
+  }, []);
+
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return <Crown className="h-5 w-5 text-yellow-500" />;
+      case 2:
+        return <Medal className="h-5 w-5 text-gray-400" />;
+      case 3:
+        return <Trophy className="h-5 w-5 text-amber-700" />;
+      default:
+        return null;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -39,47 +66,69 @@ const LeaderboardPage = () => {
                   <Award className="h-8 w-8 text-purple-700 mr-3" />
                   <h2 className="text-2xl font-bold text-purple-800">Top Players</h2>
                 </div>
-                <div className="text-sm text-gray-500">Last updated: May 7, 2025</div>
+                <div className="text-sm text-gray-500">
+                  Last updated: {formatDate(new Date().toISOString())}
+                </div>
               </div>
             </div>
             
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow className="bg-gray-50">
-                    <TableHead className="w-20">Rank</TableHead>
-                    <TableHead>Player</TableHead>
-                    <TableHead className="text-right">
-                      <div className="flex items-center justify-end">
-                        Score <ChevronUp className="ml-1 h-4 w-4" />
-                      </div>
-                    </TableHead>
-                    <TableHead className="text-right">Quizzes</TableHead>
-                    <TableHead className="text-right">Accuracy</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {leaderboardData.map((player) => (
-                    <TableRow key={player.rank} className={player.rank <= 3 ? "bg-purple-50" : ""}>
-                      <TableCell className="font-medium">
-                        {player.rank <= 3 ? (
-                          <span className={`inline-flex items-center justify-center h-6 w-6 rounded-full text-white ${
-                            player.rank === 1 ? 'bg-yellow-500' : 
-                            player.rank === 2 ? 'bg-gray-400' : 'bg-amber-700'
-                          }`}>
-                            {player.rank}
-                          </span>
-                        ) : player.rank}
-                      </TableCell>
-                      <TableCell className="font-medium">{player.name}</TableCell>
-                      <TableCell className="text-right font-bold">{player.score}</TableCell>
-                      <TableCell className="text-right">{player.quizzes}</TableCell>
-                      <TableCell className="text-right">{player.accuracy}%</TableCell>
+            {loading ? (
+              <div className="p-8 text-center">
+                <div className="text-gray-500">Loading leaderboard...</div>
+              </div>
+            ) : leaderboardData.length === 0 ? (
+              <div className="p-8 text-center">
+                <div className="text-gray-500 mb-4">No quiz results yet!</div>
+                <p className="text-sm text-gray-400">
+                  Be the first to take a quiz and claim the top spot!
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="w-20">Rank</TableHead>
+                      <TableHead>Player</TableHead>
+                      <TableHead className="text-right">
+                        <div className="flex items-center justify-end">
+                          Total Score <ChevronUp className="ml-1 h-4 w-4" />
+                        </div>
+                      </TableHead>
+                      <TableHead className="text-right">Avg Score</TableHead>
+                      <TableHead className="text-right">Quizzes</TableHead>
+                      <TableHead className="text-right">Accuracy</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
+                  </TableHeader>
+                  <TableBody>
+                    {leaderboardData.map((player, index) => {
+                      const rank = index + 1;
+                      return (
+                        <TableRow key={player.id} className={rank <= 3 ? "bg-purple-50" : ""}>
+                          <TableCell className="font-medium">
+                            <div className="flex items-center">
+                              {rank <= 3 ? (
+                                <div className="flex items-center">
+                                  {getRankIcon(rank)}
+                                  <span className="ml-2 font-bold">{rank}</span>
+                                </div>
+                              ) : (
+                                <span className="text-gray-600">{rank}</span>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{player.username}</TableCell>
+                          <TableCell className="text-right font-bold">{player.totalScore}</TableCell>
+                          <TableCell className="text-right">{player.averageScore}%</TableCell>
+                          <TableCell className="text-right">{player.totalQuizzes}</TableCell>
+                          <TableCell className="text-right">{player.accuracy}%</TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+            )}
           </div>
         </div>
       </main>

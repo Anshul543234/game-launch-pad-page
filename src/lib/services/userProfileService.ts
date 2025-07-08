@@ -1,4 +1,5 @@
 import { UserProfile, QuizAttempt } from '../types/user';
+import { updateGlobalUserData } from './leaderboardService';
 
 const STORAGE_KEY = 'quiz_app_user_profile';
 
@@ -92,6 +93,9 @@ export const saveQuizAttempt = async (userId: string, attempt: Omit<QuizAttempt,
 
     // Save to localStorage
     saveProfile(updatedProfile);
+    
+    // Update global leaderboard
+    updateGlobalUserData(updatedProfile);
 
     // Simulate API delay
     setTimeout(() => resolve(updatedProfile), 500);
