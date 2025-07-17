@@ -5,6 +5,8 @@ import Timer from '@/components/Timer';
 import QuizProgress from '@/components/QuizProgress';
 import QuizResults from '@/components/QuizResults';
 import DifficultySelector, { DifficultyLevel } from '@/components/DifficultySelector';
+import QuizModeSelector from '@/components/QuizModeSelector';
+import FlashCardContainer from '@/components/FlashCardContainer';
 import { toast } from "@/components/ui/sonner";
 import { saveQuizAttempt } from '@/lib/services/userProfileService';
 import { useNavigate } from 'react-router-dom';
@@ -23,6 +25,7 @@ const shuffleArray = (array: QuizQuestion[]) => {
 
 const QuizContainer = () => {
   const navigate = useNavigate();
+  const [selectedMode, setSelectedMode] = useState<'quiz' | 'flashcard' | null>(null);
   const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -185,6 +188,16 @@ const QuizContainer = () => {
       setIsSaving(false);
     }
   };
+
+  // Show mode selector if no mode is selected
+  if (!selectedMode) {
+    return <QuizModeSelector onSelectMode={setSelectedMode} />;
+  }
+
+  // Show flashcard container if flashcard mode is selected
+  if (selectedMode === 'flashcard') {
+    return <FlashCardContainer onBackToModeSelector={() => setSelectedMode(null)} />;
+  }
 
   // Show difficulty selector if no difficulty is selected
   if (!selectedDifficulty) {
