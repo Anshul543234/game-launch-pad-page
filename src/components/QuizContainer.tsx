@@ -4,14 +4,16 @@ import QuestionTransition from '@/components/QuestionTransition';
 import Timer from '@/components/Timer';
 import QuizProgress from '@/components/QuizProgress';
 import QuizResults from '@/components/QuizResults';
-import DifficultySelector, { DifficultyLevel } from '@/components/DifficultySelector';
+import LevelSelector from '@/components/LevelSelector';
+import LevelAdvancementModal from '@/components/LevelAdvancementModal';
 import QuizModeSelector from '@/components/QuizModeSelector';
 import FlashCardContainer from '@/components/FlashCardContainer';
 import { toast } from "@/components/ui/sonner";
-import { saveQuizAttempt } from '@/lib/services/userProfileService';
+import { saveQuizAttempt, getUserProfile } from '@/lib/services/userProfileService';
 import { useNavigate } from 'react-router-dom';
 import { playSound } from '@/lib/sounds';
-import { getQuestionsByDifficulty, getTimerDuration, QuizQuestion } from '@/data/quizQuestions';
+import { getQuestionsForLevel, QuizQuestion } from '@/data/quizQuestions';
+import { Level, checkLevelAdvancement, getCurrentLevel } from '@/lib/services/levelProgressionService';
 
 // Function to shuffle array using Fisher-Yates algorithm
 const shuffleArray = (array: QuizQuestion[]) => {
@@ -26,7 +28,7 @@ const shuffleArray = (array: QuizQuestion[]) => {
 const QuizContainer = () => {
   const navigate = useNavigate();
   const [selectedMode, setSelectedMode] = useState<'quiz' | 'flashcard' | null>(null);
-  const [selectedDifficulty, setSelectedDifficulty] = useState<DifficultyLevel | null>(null);
+  const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | undefined>(undefined);
@@ -42,6 +44,12 @@ const QuizContainer = () => {
     selectedAnswer: string;
     correctAnswer: string;
   }>>([]);
+  const [showLevelAdvancement, setShowLevelAdvancement] = useState(false);
+  const [levelAdvancementData, setLevelAdvancementData] = useState<{
+    currentLevel: Level | null;
+    newLevel: Level | null;
+    message: string;
+  }>({ currentLevel: null, newLevel: null, message: '' });
   
   // Effect to handle saving results when shouldSaveResults becomes true
   useEffect(() => {
@@ -51,10 +59,10 @@ const QuizContainer = () => {
     }
   }, [shouldSaveResults, score]);
 
-  const handleDifficultySelect = (difficulty: DifficultyLevel) => {
-    setSelectedDifficulty(difficulty);
-    const difficultyQuestions = getQuestionsByDifficulty(difficulty);
-    setQuestions(shuffleArray(difficultyQuestions));
+  const handleLevelSelect = (level: Level) => {
+    setSelectedLevel(level);
+    const levelQuestions = getQuestionsForLevel(level.difficulty, level.questionsPerQuiz);
+    setQuestions(shuffleArray(levelQuestions));
   };
   
   const currentQuestion = questions[currentQuestionIndex];
@@ -80,25 +88,27 @@ const QuizContainer = () => {
   };
 
   const handleRestart = () => {
-    if (selectedDifficulty) {
-      const difficultyQuestions = getQuestionsByDifficulty(selectedDifficulty);
-      setQuestions(shuffleArray(difficultyQuestions));
+    if (selectedLevel) {
+      const levelQuestions = getQuestionsForLevel(selectedLevel.difficulty, selectedLevel.questionsPerQuiz);
+      setQuestions(shuffleArray(levelQuestions));
     }
     setCurrentQuestionIndex(0);
     setSelectedAnswer(undefined);
     setScore(0);
     setShowResults(false);
     setAnswerSubmitted(false);
+    setWrongAnswers([]);
   };
 
-  const handleBackToDifficulty = () => {
-    setSelectedDifficulty(null);
+  const handleBackToLevels = () => {
+    setSelectedLevel(null);
     setQuestions([]);
     setCurrentQuestionIndex(0);
     setSelectedAnswer(undefined);
     setScore(0);
     setShowResults(false);
     setAnswerSubmitted(false);
+    setWrongAnswers([]);
   };
 
   const handleSubmitAnswer = () => {
@@ -110,7 +120,7 @@ const QuizContainer = () => {
     playSound(isCorrect);
     
     if (isCorrect) {
-      const newScore = score + currentQuestion.points;
+      const newScore = score + selectedLevel!.pointsPerQuestion;
       setScore(newScore);
       
       if (currentQuestionIndex === totalQuestions - 1) {
@@ -149,19 +159,18 @@ const QuizContainer = () => {
   }, [currentQuestionIndex, selectedAnswer, handleSubmitAnswer, handleNext]);
 
   const saveQuizResults = async () => {
-    if (!selectedDifficulty) return;
+    if (!selectedLevel) return;
     
     const endTime = new Date();
     const timeTaken = Math.floor((endTime.getTime() - startTime.getTime()) / 1000);
     
-    const pointsPerQuestion = selectedDifficulty === 'easy' ? 5 : selectedDifficulty === 'medium' ? 10 : 15;
-    const correctAnswers = Math.floor(score / pointsPerQuestion);
-    const maxPossibleScore = totalQuestions * pointsPerQuestion;
+    const correctAnswers = Math.floor(score / selectedLevel.pointsPerQuestion);
+    const maxPossibleScore = totalQuestions * selectedLevel.pointsPerQuestion;
     const percentageScore = (score / maxPossibleScore) * 100;
     
     const quizAttempt = {
-      quizId: `gk-${selectedDifficulty}`,
-      quizName: `General Knowledge Quiz (${selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1)})`,
+      quizId: `level-${selectedLevel.id}`,
+      quizName: `${selectedLevel.name} Level Quiz`,
       category: "General Knowledge",
       score: Math.round(percentageScore),
       totalQuestions: totalQuestions,
@@ -174,6 +183,30 @@ const QuizContainer = () => {
       setIsSaving(true);
       const savedProfile = await saveQuizAttempt('1', quizAttempt);
       
+      // Check for level advancement
+      const advancementResult = await checkLevelAdvancement(
+        Math.round(percentageScore),
+        selectedLevel.id,
+        savedProfile.quizHistory
+      );
+      
+      if (advancementResult.shouldAdvance && advancementResult.newLevel) {
+        setLevelAdvancementData({
+          currentLevel: selectedLevel,
+          newLevel: advancementResult.newLevel,
+          message: advancementResult.message || ''
+        });
+        setShowLevelAdvancement(true);
+        
+        toast.success("Level Up!", {
+          description: `You've advanced to ${advancementResult.newLevel.name} level!`,
+        });
+      } else if (advancementResult.message) {
+        toast.info("Keep Going!", {
+          description: advancementResult.message,
+        });
+      }
+      
       // Store wrong answers in localStorage for review
       localStorage.setItem('last_quiz_wrong_answers', JSON.stringify(wrongAnswers));
       
@@ -181,6 +214,7 @@ const QuizContainer = () => {
         description: `You got ${correctAnswers} out of ${totalQuestions} correct (${quizAttempt.score}%)`,
       });
     } catch (error) {
+      console.error('Save quiz error:', error);
       toast.error("Failed to save quiz results", {
         description: "Please try again later.",
       });
@@ -199,12 +233,12 @@ const QuizContainer = () => {
     return <FlashCardContainer onBackToModeSelector={() => setSelectedMode(null)} />;
   }
 
-  // Show difficulty selector if no difficulty is selected
-  if (!selectedDifficulty) {
-    return <DifficultySelector onSelectDifficulty={handleDifficultySelect} />;
+  // Show level selector if no level is selected
+  if (!selectedLevel) {
+    return <LevelSelector onSelectLevel={handleLevelSelect} />;
   }
 
-  const questionTime = getTimerDuration(selectedDifficulty);
+  const questionTime = selectedLevel.timePerQuestion;
 
   if (questions.length === 0) {
     return (
@@ -229,25 +263,29 @@ const QuizContainer = () => {
   }
 
   return (
-    <div className="w-full max-w-3xl">
-      <div className="mb-4 text-center">
-        <div className="flex items-center justify-center gap-2 mb-2">
-          <span className="text-sm text-gray-600">Difficulty:</span>
-          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
-            selectedDifficulty === 'easy' ? 'bg-green-100 text-green-800' :
-            selectedDifficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-            'bg-red-100 text-red-800'
-          }`}>
-            {selectedDifficulty.charAt(0).toUpperCase() + selectedDifficulty.slice(1)}
-          </span>
-          <button 
-            onClick={handleBackToDifficulty}
-            className="text-xs text-blue-600 hover:text-blue-800 underline ml-2"
-          >
-            Change Difficulty
-          </button>
+    <>
+      <div className="w-full max-w-3xl">
+        <div className="mb-4 text-center">
+          <div className="flex items-center justify-center gap-2 mb-2">
+            <span className="text-sm text-muted-foreground">Level:</span>
+            <div className="flex items-center gap-2">
+              <span className="text-lg">{selectedLevel.badge}</span>
+              <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                selectedLevel.difficulty === 'easy' ? 'bg-green-100 text-green-800' :
+                selectedLevel.difficulty === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                'bg-red-100 text-red-800'
+              }`}>
+                {selectedLevel.name}
+              </span>
+            </div>
+            <button 
+              onClick={handleBackToLevels}
+              className="text-xs text-blue-600 hover:text-blue-800 underline ml-2"
+            >
+              Change Level
+            </button>
+          </div>
         </div>
-      </div>
       
       <QuizProgress
         currentQuestionIndex={currentQuestionIndex}
@@ -271,11 +309,20 @@ const QuizContainer = () => {
           selectedAnswer={selectedAnswer}
           answerSubmitted={answerSubmitted}
           onSubmitAnswer={handleSubmitAnswer}
-          possiblePoints={currentQuestion.points}
+          possiblePoints={selectedLevel.pointsPerQuestion}
           correctAnswer={currentQuestion.correctAnswer}
         />
       </QuestionTransition>
-    </div>
+      </div>
+      
+      <LevelAdvancementModal
+        isOpen={showLevelAdvancement}
+        onClose={() => setShowLevelAdvancement(false)}
+        currentLevel={levelAdvancementData.currentLevel}
+        newLevel={levelAdvancementData.newLevel}
+        message={levelAdvancementData.message}
+      />
+    </>
   );
 };
 

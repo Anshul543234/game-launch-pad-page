@@ -223,3 +223,10 @@ export const getTimerDuration = (difficulty: 'easy' | 'medium' | 'hard') => {
     default: return 30;
   }
 };
+
+// Get questions for a specific level with custom count
+export const getQuestionsForLevel = (difficulty: 'easy' | 'medium' | 'hard', count: number) => {
+  const questions = getQuestionsByDifficulty(difficulty);
+  const shuffled = [...questions].sort(() => Math.random() - 0.5);
+  return shuffled.slice(0, count);
+};
