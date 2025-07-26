@@ -6,9 +6,17 @@ interface QuizProgressProps {
   currentQuestionIndex: number;
   totalQuestions: number;
   score: number;
+  consecutiveCorrect?: number;
+  currentMultiplier?: number;
 }
 
-const QuizProgress = ({ currentQuestionIndex, totalQuestions, score }: QuizProgressProps) => {
+const QuizProgress = ({ 
+  currentQuestionIndex, 
+  totalQuestions, 
+  score, 
+  consecutiveCorrect = 0, 
+  currentMultiplier = 1 
+}: QuizProgressProps) => {
   const progress = totalQuestions ? ((currentQuestionIndex + 1) / totalQuestions) * 100 : 0;
 
   return (
@@ -21,6 +29,16 @@ const QuizProgress = ({ currentQuestionIndex, totalQuestions, score }: QuizProgr
           <Badge variant="secondary" className="bg-purple-100 text-purple-800 hover:bg-purple-200">
             Score: {score}
           </Badge>
+          {consecutiveCorrect > 0 && (
+            <Badge variant="outline" className="border-orange-400 text-orange-600 bg-orange-50">
+              🔥 {consecutiveCorrect} streak
+            </Badge>
+          )}
+          {currentMultiplier > 1 && (
+            <Badge className="bg-gradient-to-r from-yellow-400 to-orange-500 text-white animate-pulse">
+              {currentMultiplier}x Multiplier
+            </Badge>
+          )}
         </div>
       </div>
       <div className="w-full bg-gray-200 rounded-full h-2">

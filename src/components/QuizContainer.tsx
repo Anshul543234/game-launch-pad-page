@@ -34,6 +34,8 @@ const QuizContainer = () => {
   const [selectedAnswer, setSelectedAnswer] = useState<string | undefined>(undefined);
   const [score, setScore] = useState(0);
   const [showResults, setShowResults] = useState(false);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+  const [currentMultiplier, setCurrentMultiplier] = useState(1);
   const [answerSubmitted, setAnswerSubmitted] = useState(false);
   const [startTime] = useState(new Date());
   const [isSaving, setIsSaving] = useState(false);
@@ -98,6 +100,8 @@ const QuizContainer = () => {
     setShowResults(false);
     setAnswerSubmitted(false);
     setWrongAnswers([]);
+    setConsecutiveCorrect(0);
+    setCurrentMultiplier(1);
   };
 
   const handleBackToLevels = () => {
@@ -109,6 +113,17 @@ const QuizContainer = () => {
     setShowResults(false);
     setAnswerSubmitted(false);
     setWrongAnswers([]);
+    setConsecutiveCorrect(0);
+    setCurrentMultiplier(1);
+  };
+
+  // Calculate multiplier based on consecutive correct answers
+  const calculateMultiplier = (consecutiveCount: number): number => {
+    if (consecutiveCount < 3) return 1;
+    if (consecutiveCount < 5) return 1.5;
+    if (consecutiveCount < 7) return 2;
+    if (consecutiveCount < 10) return 2.5;
+    return 3; // Max 3x multiplier for 10+ consecutive
   };
 
   const handleSubmitAnswer = () => {
@@ -120,14 +135,30 @@ const QuizContainer = () => {
     playSound(isCorrect);
     
     if (isCorrect) {
-      const newScore = score + selectedLevel!.pointsPerQuestion;
+      const newConsecutive = consecutiveCorrect + 1;
+      const multiplier = calculateMultiplier(newConsecutive);
+      const pointsWithMultiplier = Math.floor(selectedLevel!.pointsPerQuestion * multiplier);
+      const newScore = score + pointsWithMultiplier;
+      
+      setConsecutiveCorrect(newConsecutive);
+      setCurrentMultiplier(multiplier);
       setScore(newScore);
+      
+      if (multiplier > 1) {
+        toast.success(`${multiplier}x Streak Bonus!`, {
+          description: `${newConsecutive} correct in a row! +${pointsWithMultiplier} points`,
+        });
+      }
       
       if (currentQuestionIndex === totalQuestions - 1) {
         setShowResults(true);
         setShouldSaveResults(true);
       }
     } else {
+      // Reset streak on wrong answer
+      setConsecutiveCorrect(0);
+      setCurrentMultiplier(1);
+      
       // Track wrong answer - now we're sure currentQuestion is a valid QuizQuestion
       if (selectedAnswer) {
         const wrongAnswer = {
@@ -287,11 +318,13 @@ const QuizContainer = () => {
           </div>
         </div>
       
-      <QuizProgress
-        currentQuestionIndex={currentQuestionIndex}
-        totalQuestions={totalQuestions}
-        score={score}
-      />
+        <QuizProgress
+          currentQuestionIndex={currentQuestionIndex}
+          totalQuestions={totalQuestions}
+          score={score}
+          consecutiveCorrect={consecutiveCorrect}
+          currentMultiplier={currentMultiplier}
+        />
       
       <div className="mb-4">
         <Timer 

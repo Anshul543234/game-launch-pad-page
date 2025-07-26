@@ -35,6 +35,8 @@ const FlashCardContainer = ({ onBackToModeSelector }: FlashCardContainerProps) =
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isAnswered, setIsAnswered] = useState(false);
   const [correctAnswers, setCorrectAnswers] = useState(0);
+  const [consecutiveCorrect, setConsecutiveCorrect] = useState(0);
+  const [currentMultiplier, setCurrentMultiplier] = useState(1);
 
   const handleDifficultySelect = (difficulty: DifficultyLevel) => {
     setSelectedDifficulty(difficulty);
@@ -45,14 +47,35 @@ const FlashCardContainer = ({ onBackToModeSelector }: FlashCardContainerProps) =
   const currentQuestion = questions[currentQuestionIndex];
   const totalQuestions = questions.length;
   
+  // Calculate multiplier based on consecutive correct answers
+  const calculateMultiplier = (consecutiveCount: number): number => {
+    if (consecutiveCount < 3) return 1;
+    if (consecutiveCount < 5) return 1.5;
+    if (consecutiveCount < 7) return 2;
+    if (consecutiveCount < 10) return 2.5;
+    return 3; // Max 3x multiplier for 10+ consecutive
+  };
+
   const handleMarkCorrect = () => {
     setIsAnswered(true);
     playSound(true);
     
-    const newScore = score + currentQuestion.points;
+    const newConsecutive = consecutiveCorrect + 1;
+    const multiplier = calculateMultiplier(newConsecutive);
+    const pointsWithMultiplier = Math.floor(currentQuestion.points * multiplier);
+    const newScore = score + pointsWithMultiplier;
     const newCorrectAnswers = correctAnswers + 1;
+    
+    setConsecutiveCorrect(newConsecutive);
+    setCurrentMultiplier(multiplier);
     setScore(newScore);
     setCorrectAnswers(newCorrectAnswers);
+    
+    if (multiplier > 1) {
+      toast.success(`${multiplier}x Streak Bonus!`, {
+        description: `${newConsecutive} correct in a row! +${pointsWithMultiplier} points`,
+      });
+    }
     
     if (currentQuestionIndex === totalQuestions - 1) {
       setTimeout(() => {
@@ -65,6 +88,10 @@ const FlashCardContainer = ({ onBackToModeSelector }: FlashCardContainerProps) =
   const handleMarkIncorrect = () => {
     setIsAnswered(true);
     playSound(false);
+    
+    // Reset streak on wrong answer
+    setConsecutiveCorrect(0);
+    setCurrentMultiplier(1);
     
     if (currentQuestionIndex === totalQuestions - 1) {
       setTimeout(() => {
@@ -96,6 +123,8 @@ const FlashCardContainer = ({ onBackToModeSelector }: FlashCardContainerProps) =
     setCorrectAnswers(0);
     setShowResults(false);
     setIsAnswered(false);
+    setConsecutiveCorrect(0);
+    setCurrentMultiplier(1);
   };
 
   const handleBackToDifficulty = () => {
@@ -106,6 +135,8 @@ const FlashCardContainer = ({ onBackToModeSelector }: FlashCardContainerProps) =
     setCorrectAnswers(0);
     setShowResults(false);
     setIsAnswered(false);
+    setConsecutiveCorrect(0);
+    setCurrentMultiplier(1);
   };
 
   const saveQuizResults = async (finalScore: number, finalCorrectAnswers: number) => {
@@ -240,6 +271,8 @@ const FlashCardContainer = ({ onBackToModeSelector }: FlashCardContainerProps) =
         currentQuestionIndex={currentQuestionIndex}
         totalQuestions={totalQuestions}
         score={score}
+        consecutiveCorrect={consecutiveCorrect}
+        currentMultiplier={currentMultiplier}
       />
       
       <QuestionTransition isTransitioning={isTransitioning}>
