@@ -1,7 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Badge } from "@/components/ui/badge";
 import { Link } from 'react-router-dom';
+import FeedbackModal, { FeedbackData } from './FeedbackModal';
+import { feedbackService } from '@/lib/services/feedbackService';
+import { Button } from '@/components/ui/button';
 
 interface QuizResultsProps {
   score: number;
@@ -11,9 +14,15 @@ interface QuizResultsProps {
 }
 
 const QuizResults = ({ score, totalQuestions, onRestart, isSaving }: QuizResultsProps) => {
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
   const percentage = Math.floor((score / (totalQuestions * 10)) * 100);
   const correctAnswers = Math.floor(score / 10);
   const wrongAnswers = totalQuestions - correctAnswers;
+
+  const handleFeedbackSubmit = (feedback: FeedbackData) => {
+    feedbackService.saveFeedback(feedback);
+    setShowFeedbackModal(false);
+  };
 
   return (
     <div className="bg-white p-8 rounded-lg shadow-lg text-center">
@@ -26,21 +35,27 @@ const QuizResults = ({ score, totalQuestions, onRestart, isSaving }: QuizResults
         </span>
       </p>
       <div className="space-y-4">
-        <div className="flex justify-center gap-4">
-          <button
+        <div className="flex justify-center gap-4 flex-wrap">
+          <Button
             onClick={onRestart}
-            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 px-4 rounded transition-colors"
             disabled={isSaving}
           >
             Try Again
-          </button>
+          </Button>
           {wrongAnswers > 0 && (
             <Link to="/review">
-              <button className="bg-orange-600 hover:bg-orange-700 text-white font-bold py-2 px-4 rounded transition-colors">
+              <Button variant="outline">
                 Review Wrong Answers ({wrongAnswers})
-              </button>
+              </Button>
             </Link>
           )}
+          <Button
+            variant="outline"
+            onClick={() => setShowFeedbackModal(true)}
+            className="flex items-center gap-2"
+          >
+            Share Feedback
+          </Button>
         </div>
         {isSaving ? (
           <div className="text-gray-600">
@@ -52,6 +67,14 @@ const QuizResults = ({ score, totalQuestions, onRestart, isSaving }: QuizResults
           </div>
         )}
       </div>
+      
+      <FeedbackModal
+        isOpen={showFeedbackModal}
+        onClose={() => setShowFeedbackModal(false)}
+        onSubmit={handleFeedbackSubmit}
+        quizType="quiz"
+        score={score}
+      />
     </div>
   );
 };
