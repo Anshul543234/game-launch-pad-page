@@ -344,6 +344,8 @@ const QuizContainer = () => {
           onSubmitAnswer={handleSubmitAnswer}
           possiblePoints={selectedLevel.pointsPerQuestion}
           correctAnswer={currentQuestion.correctAnswer}
+          hint={currentQuestion.hint}
+          difficulty={currentQuestion.difficulty}
         />
       </QuestionTransition>
       </div>

@@ -6,6 +6,7 @@ export interface QuizQuestion {
   correctAnswer: string;
   points: number;
   difficulty: 'easy' | 'medium' | 'hard';
+  hint?: string;
 }
 
 export const quizQuestions: QuizQuestion[] = [
@@ -89,6 +90,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 10,
     difficulty: 'medium',
+    hint: 'This planet appears reddish due to iron oxide (rust) on its surface.',
   },
   {
     id: 'm2',
@@ -102,6 +104,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 10,
     difficulty: 'medium',
+    hint: 'This famous playwright lived in England during the Elizabethan era.',
   },
   {
     id: 'm3',
@@ -115,6 +118,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 10,
     difficulty: 'medium',
+    hint: 'The symbol comes from the Latin word "aurum" meaning gold.',
   },
   {
     id: 'm4',
@@ -128,6 +132,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'd',
     points: 10,
     difficulty: 'medium',
+    hint: 'This country\'s flag features a red circle representing the sun.',
   },
   {
     id: 'm5',
@@ -141,6 +146,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 10,
     difficulty: 'medium',
+    hint: 'The war ended the same year atomic bombs were dropped on Japan.',
   },
 
   // Hard Questions
@@ -156,6 +162,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'a',
     points: 15,
     difficulty: 'hard',
+    hint: 'This bone is found in the middle ear and is shaped like a stirrup.',
   },
   {
     id: 'h2',
@@ -169,6 +176,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 15,
     difficulty: 'hard',
+    hint: 'This paradigm treats computation as the evaluation of mathematical functions.',
   },
   {
     id: 'h3',
@@ -182,6 +190,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 15,
     difficulty: 'hard',
+    hint: 'This occurs when the pivot is always the smallest or largest element.',
   },
   {
     id: 'h4',
@@ -195,6 +204,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 15,
     difficulty: 'hard',
+    hint: 'This 18th-century Scottish philosopher is often called the father of modern economics.',
   },
   {
     id: 'h5',
@@ -208,6 +218,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'a',
     points: 15,
     difficulty: 'hard',
+    hint: 'Think about the inverse relationship between natural log and exponential functions.',
   },
 ];
 

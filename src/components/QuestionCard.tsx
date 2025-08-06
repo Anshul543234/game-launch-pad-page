@@ -1,10 +1,10 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Check, ChevronRight, TimerIcon, X } from 'lucide-react';
+import { Check, ChevronRight, TimerIcon, X, Lightbulb } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
@@ -23,6 +23,8 @@ interface QuestionCardProps {
   onSubmitAnswer: () => void;
   possiblePoints: number;
   correctAnswer?: string;
+  hint?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 const QuestionCard = ({
@@ -35,7 +37,11 @@ const QuestionCard = ({
   onSubmitAnswer,
   possiblePoints,
   correctAnswer,
+  hint,
+  difficulty,
 }: QuestionCardProps) => {
+  const [showHint, setShowHint] = useState(false);
+  
   const handleValueChange = (value: string) => {
     onAnswer(value);
   };
@@ -48,10 +54,31 @@ const QuestionCard = ({
       <CardHeader className="bg-purple-50 border-b">
         <div className="flex justify-between items-center">
           <CardTitle className="text-xl font-medium">{question}</CardTitle>
-          <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
-            <TimerIcon className="h-3 w-3 mr-1" /> {possiblePoints} pts
-          </Badge>
+          <div className="flex items-center gap-2">
+            {hint && (difficulty === 'medium' || difficulty === 'hard') && !answerSubmitted && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowHint(!showHint)}
+                className="text-yellow-600 border-yellow-300 hover:bg-yellow-50"
+              >
+                <Lightbulb className="h-3 w-3 mr-1" />
+                Hint
+              </Button>
+            )}
+            <Badge variant="outline" className="bg-purple-100 text-purple-800 border-purple-200">
+              <TimerIcon className="h-3 w-3 mr-1" /> {possiblePoints} pts
+            </Badge>
+          </div>
         </div>
+        {showHint && hint && (
+          <Alert className="mt-3 border-yellow-300 bg-yellow-50">
+            <Lightbulb className="h-4 w-4 text-yellow-600" />
+            <AlertDescription className="text-yellow-800">
+              <strong>Hint:</strong> {hint}
+            </AlertDescription>
+          </Alert>
+        )}
       </CardHeader>
       <CardContent className="pt-6">
         <RadioGroup
