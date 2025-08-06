@@ -42,7 +42,7 @@ const createLevelStructure = (): Level[] => [
     difficulty: 'easy',
     requiredScore: 70,
     requiredQuizzes: 3,
-    unlocked: false,
+    unlocked: true,
     questionsPerQuiz: 6,
     timePerQuestion: 40,
     pointsPerQuestion: 6,
@@ -55,7 +55,7 @@ const createLevelStructure = (): Level[] => [
     difficulty: 'medium',
     requiredScore: 65,
     requiredQuizzes: 2,
-    unlocked: false,
+    unlocked: true,
     questionsPerQuiz: 5,
     timePerQuestion: 35,
     pointsPerQuestion: 10,
@@ -68,7 +68,7 @@ const createLevelStructure = (): Level[] => [
     difficulty: 'medium',
     requiredScore: 75,
     requiredQuizzes: 3,
-    unlocked: false,
+    unlocked: true,
     questionsPerQuiz: 7,
     timePerQuestion: 30,
     pointsPerQuestion: 12,
@@ -81,7 +81,7 @@ const createLevelStructure = (): Level[] => [
     difficulty: 'hard',
     requiredScore: 70,
     requiredQuizzes: 2,
-    unlocked: false,
+    unlocked: true,
     questionsPerQuiz: 5,
     timePerQuestion: 25,
     pointsPerQuestion: 15,
@@ -94,7 +94,7 @@ const createLevelStructure = (): Level[] => [
     difficulty: 'hard',
     requiredScore: 80,
     requiredQuizzes: 3,
-    unlocked: false,
+    unlocked: true,
     questionsPerQuiz: 8,
     timePerQuestion: 20,
     pointsPerQuestion: 18,
@@ -107,7 +107,7 @@ const createLevelStructure = (): Level[] => [
     difficulty: 'hard',
     requiredScore: 85,
     requiredQuizzes: 5,
-    unlocked: false,
+    unlocked: true,
     questionsPerQuiz: 10,
     timePerQuestion: 18,
     pointsPerQuestion: 20,
@@ -120,7 +120,7 @@ const getDefaultProgress = (): LevelProgress => ({
   currentLevel: 1,
   levels: createLevelStructure(),
   totalExperience: 0,
-  unlockedLevels: new Set([1])
+  unlockedLevels: new Set([1, 2, 3, 4, 5, 6, 7])
 });
 
 const getStoredProgress = (): LevelProgress => {
@@ -137,7 +137,7 @@ const getStoredProgress = (): LevelProgress => {
   const parsed = JSON.parse(stored);
   return {
     ...parsed,
-    unlockedLevels: new Set(parsed.unlockedLevels || [1])
+    unlockedLevels: new Set(parsed.unlockedLevels || [1, 2, 3, 4, 5, 6, 7])
   };
 };
 
@@ -266,11 +266,6 @@ export const unlockLevel = async (levelId: number): Promise<LevelProgress> => {
 
 export const setCurrentLevel = async (levelId: number): Promise<LevelProgress> => {
   const progress = getStoredProgress();
-  
-  // Only allow setting to unlocked levels
-  if (!progress.unlockedLevels.has(levelId)) {
-    throw new Error('Level is not unlocked');
-  }
   
   const updatedProgress: LevelProgress = {
     ...progress,

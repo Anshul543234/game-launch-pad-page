@@ -36,8 +36,6 @@ const LevelSelector = ({ onSelectLevel }: LevelSelectorProps) => {
   }, []);
 
   const handleLevelSelect = async (level: Level) => {
-    if (!level.unlocked) return;
-    
     try {
       await setCurrentLevel(level.id);
       onSelectLevel(level);
