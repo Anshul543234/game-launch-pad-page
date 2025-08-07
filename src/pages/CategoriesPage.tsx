@@ -1,55 +1,46 @@
 
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { getAllCategories, getQuestionsByCategory } from '@/data/quizQuestions';
 
-const categories = [
-  {
-    id: 1,
-    name: 'Science',
-    description: 'Test your knowledge about physics, chemistry, biology, and more.',
-    icon: '🔬',
-    questions: 25
-  },
-  {
-    id: 2,
-    name: 'History',
-    description: 'Explore events from ancient times to modern day milestones.',
-    icon: '📜',
-    questions: 30
-  },
-  {
-    id: 3,
-    name: 'Geography',
-    description: 'Navigate through countries, capitals, landforms, and cultures.',
-    icon: '🌍',
-    questions: 20
-  },
-  {
-    id: 4,
-    name: 'Entertainment',
-    description: 'Challenge yourself on movies, music, TV shows, and celebrities.',
-    icon: '🎬',
-    questions: 35
-  },
-  {
-    id: 5,
-    name: 'Sports',
-    description: 'Put your sports trivia to the test across various competitions.',
-    icon: '⚽',
-    questions: 28
-  },
-  {
-    id: 6,
-    name: 'Literature',
-    description: 'Examine your knowledge of books, authors, and literary works.',
-    icon: '📚',
-    questions: 22
-  }
-];
+const getCategoryIcon = (category: string) => {
+  const icons: { [key: string]: string } = {
+    'Science': '🔬',
+    'History': '📜',
+    'Geography': '🌍',
+    'Entertainment': '🎬',
+    'Sports': '⚽',
+    'Literature': '📚',
+    'General': '🧠'
+  };
+  return icons[category] || '❓';
+};
+
+const getCategoryDescription = (category: string) => {
+  const descriptions: { [key: string]: string } = {
+    'Science': 'Test your knowledge about physics, chemistry, biology, and more.',
+    'History': 'Explore events from ancient times to modern day milestones.',
+    'Geography': 'Navigate through countries, capitals, landforms, and cultures.',
+    'Entertainment': 'Challenge yourself on movies, music, TV shows, and celebrities.',
+    'Sports': 'Put your sports trivia to the test across various competitions.',
+    'Literature': 'Examine your knowledge of books, authors, and literary works.',
+    'General': 'Test your general knowledge across various topics.'
+  };
+  return descriptions[category] || 'Test your knowledge in this category.';
+};
 
 const CategoriesPage = () => {
+  const navigate = useNavigate();
+  const availableCategories = getAllCategories();
+
+  const handleStartQuiz = (category: string) => {
+    // Store selected category in sessionStorage and navigate to quiz
+    sessionStorage.setItem('selectedCategory', category);
+    navigate('/question');
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -63,25 +54,31 @@ const CategoriesPage = () => {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {categories.map((category) => (
-              <Card key={category.id} className="overflow-hidden hover:shadow-lg transition-shadow">
-                <CardHeader className="bg-purple-100">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl font-bold">{category.name}</CardTitle>
-                    <span className="text-3xl">{category.icon}</span>
-                  </div>
-                  <CardDescription>{category.description}</CardDescription>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-500">{category.questions} questions</span>
-                    <button className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors">
-                      Start Quiz
-                    </button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+            {availableCategories.map((category) => {
+              const questionsCount = getQuestionsByCategory(category).length;
+              return (
+                <Card key={category} className="overflow-hidden hover:shadow-lg transition-shadow">
+                  <CardHeader className="bg-purple-100">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-xl font-bold">{category}</CardTitle>
+                      <span className="text-3xl">{getCategoryIcon(category)}</span>
+                    </div>
+                    <CardDescription>{getCategoryDescription(category)}</CardDescription>
+                  </CardHeader>
+                  <CardContent className="pt-6">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-gray-500">{questionsCount} questions</span>
+                      <button 
+                        onClick={() => handleStartQuiz(category)}
+                        className="bg-purple-600 hover:bg-purple-700 text-white font-medium py-2 px-4 rounded-md transition-colors"
+                      >
+                        Start Quiz
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
           </div>
         </div>
       </main>

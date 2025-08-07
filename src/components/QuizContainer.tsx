@@ -12,7 +12,7 @@ import { toast } from "@/components/ui/sonner";
 import { saveQuizAttempt, getUserProfile } from '@/lib/services/userProfileService';
 import { useNavigate } from 'react-router-dom';
 import { playSound } from '@/lib/sounds';
-import { getQuestionsForLevel, QuizQuestion } from '@/data/quizQuestions';
+import { getQuestionsForLevel, getQuestionsByCategoryAndDifficulty, QuizQuestion } from '@/data/quizQuestions';
 import { Level, checkLevelAdvancement, getCurrentLevel } from '@/lib/services/levelProgressionService';
 
 // Function to shuffle array using Fisher-Yates algorithm
@@ -29,6 +29,7 @@ const QuizContainer = () => {
   const navigate = useNavigate();
   const [selectedMode, setSelectedMode] = useState<'quiz' | 'flashcard' | null>(null);
   const [selectedLevel, setSelectedLevel] = useState<Level | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<string | undefined>(undefined);
@@ -53,6 +54,16 @@ const QuizContainer = () => {
     message: string;
   }>({ currentLevel: null, newLevel: null, message: '' });
   
+  // Effect to check for selected category from session storage
+  useEffect(() => {
+    const storedCategory = sessionStorage.getItem('selectedCategory');
+    if (storedCategory) {
+      setSelectedCategory(storedCategory);
+      setSelectedMode('quiz'); // Auto-select quiz mode when coming from categories
+      sessionStorage.removeItem('selectedCategory'); // Clear after use
+    }
+  }, []);
+
   // Effect to handle saving results when shouldSaveResults becomes true
   useEffect(() => {
     if (shouldSaveResults) {
@@ -63,7 +74,22 @@ const QuizContainer = () => {
 
   const handleLevelSelect = (level: Level) => {
     setSelectedLevel(level);
-    const levelQuestions = getQuestionsForLevel(level.difficulty, level.questionsPerQuiz);
+    let levelQuestions: QuizQuestion[];
+    
+    if (selectedCategory) {
+      // Get questions filtered by category and difficulty
+      levelQuestions = getQuestionsByCategoryAndDifficulty(selectedCategory, level.difficulty);
+      // If not enough questions in category, fall back to all questions of that difficulty
+      if (levelQuestions.length < level.questionsPerQuiz) {
+        levelQuestions = getQuestionsForLevel(level.difficulty, level.questionsPerQuiz);
+      } else {
+        // Slice to get the required number of questions
+        levelQuestions = levelQuestions.slice(0, level.questionsPerQuiz);
+      }
+    } else {
+      levelQuestions = getQuestionsForLevel(level.difficulty, level.questionsPerQuiz);
+    }
+    
     setQuestions(shuffleArray(levelQuestions));
   };
   
@@ -91,7 +117,19 @@ const QuizContainer = () => {
 
   const handleRestart = () => {
     if (selectedLevel) {
-      const levelQuestions = getQuestionsForLevel(selectedLevel.difficulty, selectedLevel.questionsPerQuiz);
+      let levelQuestions: QuizQuestion[];
+      
+      if (selectedCategory) {
+        levelQuestions = getQuestionsByCategoryAndDifficulty(selectedCategory, selectedLevel.difficulty);
+        if (levelQuestions.length < selectedLevel.questionsPerQuiz) {
+          levelQuestions = getQuestionsForLevel(selectedLevel.difficulty, selectedLevel.questionsPerQuiz);
+        } else {
+          levelQuestions = levelQuestions.slice(0, selectedLevel.questionsPerQuiz);
+        }
+      } else {
+        levelQuestions = getQuestionsForLevel(selectedLevel.difficulty, selectedLevel.questionsPerQuiz);
+      }
+      
       setQuestions(shuffleArray(levelQuestions));
     }
     setCurrentQuestionIndex(0);
@@ -115,6 +153,10 @@ const QuizContainer = () => {
     setWrongAnswers([]);
     setConsecutiveCorrect(0);
     setCurrentMultiplier(1);
+  };
+
+  const handleBackToCategories = () => {
+    navigate('/categories');
   };
 
   // Calculate multiplier based on consecutive correct answers
@@ -200,9 +242,9 @@ const QuizContainer = () => {
     const percentageScore = (score / maxPossibleScore) * 100;
     
     const quizAttempt = {
-      quizId: `level-${selectedLevel.id}`,
-      quizName: `${selectedLevel.name} Level Quiz`,
-      category: "General Knowledge",
+      quizId: `level-${selectedLevel.id}${selectedCategory ? `-${selectedCategory}` : ''}`,
+      quizName: `${selectedLevel.name} Level Quiz${selectedCategory ? ` - ${selectedCategory}` : ''}`,
+      category: selectedCategory || "General Knowledge",
       score: Math.round(percentageScore),
       totalQuestions: totalQuestions,
       date: new Date().toISOString(),
@@ -298,6 +340,15 @@ const QuizContainer = () => {
       <div className="w-full max-w-3xl">
         <div className="mb-4 text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
+            {selectedCategory && (
+              <>
+                <span className="text-sm text-muted-foreground">Category:</span>
+                <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded text-xs font-medium">
+                  {selectedCategory}
+                </span>
+                <span className="text-sm text-muted-foreground">•</span>
+              </>
+            )}
             <span className="text-sm text-muted-foreground">Level:</span>
             <div className="flex items-center gap-2">
               <span className="text-lg">{selectedLevel.badge}</span>
@@ -315,6 +366,14 @@ const QuizContainer = () => {
             >
               Change Level
             </button>
+            {selectedCategory && (
+              <button 
+                onClick={handleBackToCategories}
+                className="text-xs text-blue-600 hover:text-blue-800 underline ml-2"
+              >
+                Change Category
+              </button>
+            )}
           </div>
         </div>
       

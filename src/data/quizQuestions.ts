@@ -6,11 +6,12 @@ export interface QuizQuestion {
   correctAnswer: string;
   points: number;
   difficulty: 'easy' | 'medium' | 'hard';
+  category: string;
   hint?: string;
 }
 
 export const quizQuestions: QuizQuestion[] = [
-  // Easy Questions
+  // Easy Questions - Science
   {
     id: 'e1',
     question: 'What color do you get when you mix red and white?',
@@ -23,6 +24,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 5,
     difficulty: 'easy',
+    category: 'Science',
   },
   {
     id: 'e2',
@@ -36,6 +38,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 5,
     difficulty: 'easy',
+    category: 'General',
   },
   {
     id: 'e3',
@@ -49,6 +52,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 5,
     difficulty: 'easy',
+    category: 'General',
   },
   {
     id: 'e4',
@@ -62,6 +66,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 5,
     difficulty: 'easy',
+    category: 'Science',
   },
   {
     id: 'e5',
@@ -75,6 +80,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 5,
     difficulty: 'easy',
+    category: 'General',
   },
 
   // Medium Questions
@@ -90,6 +96,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 10,
     difficulty: 'medium',
+    category: 'Science',
     hint: 'This planet appears reddish due to iron oxide (rust) on its surface.',
   },
   {
@@ -104,6 +111,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 10,
     difficulty: 'medium',
+    category: 'Literature',
     hint: 'This famous playwright lived in England during the Elizabethan era.',
   },
   {
@@ -118,6 +126,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 10,
     difficulty: 'medium',
+    category: 'Science',
     hint: 'The symbol comes from the Latin word "aurum" meaning gold.',
   },
   {
@@ -132,6 +141,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'd',
     points: 10,
     difficulty: 'medium',
+    category: 'Geography',
     hint: 'This country\'s flag features a red circle representing the sun.',
   },
   {
@@ -146,6 +156,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'b',
     points: 10,
     difficulty: 'medium',
+    category: 'History',
     hint: 'The war ended the same year atomic bombs were dropped on Japan.',
   },
 
@@ -162,6 +173,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'a',
     points: 15,
     difficulty: 'hard',
+    category: 'Science',
     hint: 'This bone is found in the middle ear and is shaped like a stirrup.',
   },
   {
@@ -176,6 +188,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 15,
     difficulty: 'hard',
+    category: 'Science',
     hint: 'This paradigm treats computation as the evaluation of mathematical functions.',
   },
   {
@@ -190,6 +203,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 15,
     difficulty: 'hard',
+    category: 'Science',
     hint: 'This occurs when the pivot is always the smallest or largest element.',
   },
   {
@@ -204,6 +218,7 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'c',
     points: 15,
     difficulty: 'hard',
+    category: 'History',
     hint: 'This 18th-century Scottish philosopher is often called the father of modern economics.',
   },
   {
@@ -218,12 +233,152 @@ export const quizQuestions: QuizQuestion[] = [
     correctAnswer: 'a',
     points: 15,
     difficulty: 'hard',
+    category: 'Science',
     hint: 'Think about the inverse relationship between natural log and exponential functions.',
+  },
+
+  // Additional categorized questions
+  // Entertainment Easy
+  {
+    id: 'ent1',
+    question: 'Which movie features the song "Let It Go"?',
+    options: [
+      { id: 'a', text: 'Moana' },
+      { id: 'b', text: 'Frozen' },
+      { id: 'c', text: 'Tangled' },
+      { id: 'd', text: 'The Little Mermaid' },
+    ],
+    correctAnswer: 'b',
+    points: 5,
+    difficulty: 'easy',
+    category: 'Entertainment',
+  },
+  {
+    id: 'ent2',
+    question: 'What instrument does Sherlock Holmes play?',
+    options: [
+      { id: 'a', text: 'Piano' },
+      { id: 'b', text: 'Guitar' },
+      { id: 'c', text: 'Violin' },
+      { id: 'd', text: 'Flute' },
+    ],
+    correctAnswer: 'c',
+    points: 10,
+    difficulty: 'medium',
+    category: 'Entertainment',
+    hint: 'This string instrument is often associated with classical music.',
+  },
+
+  // Sports Questions
+  {
+    id: 'spt1',
+    question: 'How many players are on a basketball team on the court at one time?',
+    options: [
+      { id: 'a', text: '4' },
+      { id: 'b', text: '5' },
+      { id: 'c', text: '6' },
+      { id: 'd', text: '7' },
+    ],
+    correctAnswer: 'b',
+    points: 5,
+    difficulty: 'easy',
+    category: 'Sports',
+  },
+  {
+    id: 'spt2',
+    question: 'Which country hosted the 2016 Summer Olympics?',
+    options: [
+      { id: 'a', text: 'China' },
+      { id: 'b', text: 'United Kingdom' },
+      { id: 'c', text: 'Brazil' },
+      { id: 'd', text: 'Russia' },
+    ],
+    correctAnswer: 'c',
+    points: 10,
+    difficulty: 'medium',
+    category: 'Sports',
+    hint: 'This South American country is famous for soccer and carnival.',
+  },
+
+  // More History Questions
+  {
+    id: 'hist1',
+    question: 'Who was the first President of the United States?',
+    options: [
+      { id: 'a', text: 'Thomas Jefferson' },
+      { id: 'b', text: 'John Adams' },
+      { id: 'c', text: 'George Washington' },
+      { id: 'd', text: 'Benjamin Franklin' },
+    ],
+    correctAnswer: 'c',
+    points: 5,
+    difficulty: 'easy',
+    category: 'History',
+  },
+  {
+    id: 'hist2',
+    question: 'In which year did the Berlin Wall fall?',
+    options: [
+      { id: 'a', text: '1987' },
+      { id: 'b', text: '1989' },
+      { id: 'c', text: '1991' },
+      { id: 'd', text: '1993' },
+    ],
+    correctAnswer: 'b',
+    points: 15,
+    difficulty: 'hard',
+    category: 'History',
+    hint: 'This event happened shortly before the end of the Cold War.',
+  },
+
+  // More Geography Questions
+  {
+    id: 'geo1',
+    question: 'What is the capital of Australia?',
+    options: [
+      { id: 'a', text: 'Sydney' },
+      { id: 'b', text: 'Melbourne' },
+      { id: 'c', text: 'Canberra' },
+      { id: 'd', text: 'Perth' },
+    ],
+    correctAnswer: 'c',
+    points: 10,
+    difficulty: 'medium',
+    category: 'Geography',
+    hint: 'It\'s not the largest city, but was purpose-built to be the capital.',
+  },
+  {
+    id: 'geo2',
+    question: 'Which river is the longest in the world?',
+    options: [
+      { id: 'a', text: 'Amazon' },
+      { id: 'b', text: 'Nile' },
+      { id: 'c', text: 'Mississippi' },
+      { id: 'd', text: 'Yangtze' },
+    ],
+    correctAnswer: 'b',
+    points: 15,
+    difficulty: 'hard',
+    category: 'Geography',
+    hint: 'This river flows through northeastern Africa.',
   },
 ];
 
 export const getQuestionsByDifficulty = (difficulty: 'easy' | 'medium' | 'hard') => {
   return quizQuestions.filter(q => q.difficulty === difficulty);
+};
+
+export const getQuestionsByCategory = (category: string) => {
+  return quizQuestions.filter(q => q.category === category);
+};
+
+export const getQuestionsByCategoryAndDifficulty = (category: string, difficulty: 'easy' | 'medium' | 'hard') => {
+  return quizQuestions.filter(q => q.category === category && q.difficulty === difficulty);
+};
+
+export const getAllCategories = () => {
+  const categories = [...new Set(quizQuestions.map(q => q.category))];
+  return categories.sort();
 };
 
 export const getTimerDuration = (difficulty: 'easy' | 'medium' | 'hard') => {
