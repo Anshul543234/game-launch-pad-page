@@ -9,6 +9,12 @@ export interface LeaderboardEntry {
   accuracy: number;
   bestScore: number;
   lastActivity: string;
+  categories: string[];
+}
+
+export interface LeaderboardFilters {
+  category?: string;
+  difficulty?: 'easy' | 'medium' | 'hard';
 }
 
 const LEADERBOARD_STORAGE_KEY = 'quiz_app_global_leaderboard';
@@ -41,32 +47,52 @@ export const updateGlobalUserData = (userProfile: UserProfile): void => {
 };
 
 // Calculate leaderboard entries from user profiles
-const calculateLeaderboardEntry = (user: UserProfile): LeaderboardEntry => {
-  const totalScore = user.quizHistory.reduce((sum, attempt) => sum + attempt.score, 0);
-  const totalQuestions = user.quizHistory.reduce((sum, attempt) => sum + attempt.totalQuestions, 0);
-  const correctAnswers = user.quizHistory.reduce((sum, attempt) => sum + attempt.correctAnswers, 0);
+const calculateLeaderboardEntry = (user: UserProfile, filters?: LeaderboardFilters): LeaderboardEntry => {
+  let filteredHistory = user.quizHistory;
+  
+  // Apply filters if provided
+  if (filters?.category) {
+    filteredHistory = filteredHistory.filter(attempt => attempt.category === filters.category);
+  }
+  
+  const totalScore = filteredHistory.reduce((sum, attempt) => sum + attempt.score, 0);
+  const totalQuestions = filteredHistory.reduce((sum, attempt) => sum + attempt.totalQuestions, 0);
+  const correctAnswers = filteredHistory.reduce((sum, attempt) => sum + attempt.correctAnswers, 0);
   const accuracy = totalQuestions > 0 ? Math.round((correctAnswers / totalQuestions) * 100) : 0;
-  const bestScore = Math.max(...user.quizHistory.map(attempt => attempt.score), 0);
-  const lastActivity = user.quizHistory.length > 0 ? user.quizHistory[0].date : user.joinDate;
+  const bestScore = Math.max(...filteredHistory.map(attempt => attempt.score), 0);
+  const lastActivity = filteredHistory.length > 0 ? filteredHistory[0].date : user.joinDate;
+  const categories = [...new Set(user.quizHistory.map(attempt => attempt.category))];
 
   return {
     id: user.id,
     username: user.username,
     totalScore,
-    totalQuizzes: user.totalQuizzesTaken,
-    averageScore: user.averageScore,
+    totalQuizzes: filteredHistory.length,
+    averageScore: filteredHistory.length > 0 ? Math.round(totalScore / filteredHistory.length) : 0,
     accuracy,
-    bestScore,
-    lastActivity
+    bestScore: bestScore > 0 ? bestScore : 0,
+    lastActivity,
+    categories
   };
 };
 
 // Generate and save leaderboard
-const generateLeaderboard = (): LeaderboardEntry[] => {
+const generateLeaderboard = (filters?: LeaderboardFilters): LeaderboardEntry[] => {
   const allUsers = getAllUsers();
   const leaderboard = allUsers
     .filter(user => user.totalQuizzesTaken > 0) // Only include users who have taken quizzes
-    .map(calculateLeaderboardEntry)
+    .map(user => calculateLeaderboardEntry(user, filters))
+    .filter(entry => {
+      // Filter out users with no quizzes after applying filters
+      if (entry.totalQuizzes === 0) return false;
+      
+      // Filter by category if specified
+      if (filters?.category && !entry.categories.includes(filters.category)) {
+        return false;
+      }
+      
+      return true;
+    })
     .sort((a, b) => {
       // Primary sort: total score (descending)
       if (b.totalScore !== a.totalScore) {
@@ -80,12 +106,18 @@ const generateLeaderboard = (): LeaderboardEntry[] => {
       return b.totalQuizzes - a.totalQuizzes;
     });
 
-  localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(leaderboard));
+  if (!filters) {
+    localStorage.setItem(LEADERBOARD_STORAGE_KEY, JSON.stringify(leaderboard));
+  }
   return leaderboard;
 };
 
 // Get current leaderboard
-export const getLeaderboard = (): LeaderboardEntry[] => {
+export const getLeaderboard = (filters?: LeaderboardFilters): LeaderboardEntry[] => {
+  if (filters) {
+    return generateLeaderboard(filters);
+  }
+  
   const stored = localStorage.getItem(LEADERBOARD_STORAGE_KEY);
   if (stored) {
     return JSON.parse(stored);
@@ -96,16 +128,30 @@ export const getLeaderboard = (): LeaderboardEntry[] => {
 };
 
 // Get user's rank on leaderboard
-export const getUserRank = (userId: string): number => {
-  const leaderboard = getLeaderboard();
+export const getUserRank = (userId: string, filters?: LeaderboardFilters): number => {
+  const leaderboard = getLeaderboard(filters);
   const userIndex = leaderboard.findIndex(entry => entry.id === userId);
   return userIndex >= 0 ? userIndex + 1 : -1;
 };
 
 // Get top N users
-export const getTopUsers = (limit: number = 10): LeaderboardEntry[] => {
-  const leaderboard = getLeaderboard();
+export const getTopUsers = (limit: number = 10, filters?: LeaderboardFilters): LeaderboardEntry[] => {
+  const leaderboard = getLeaderboard(filters);
   return leaderboard.slice(0, limit);
+};
+
+// Get all available categories from quiz data
+export const getAvailableCategories = (): string[] => {
+  const allUsers = getAllUsers();
+  const categories = new Set<string>();
+  
+  allUsers.forEach(user => {
+    user.quizHistory.forEach(attempt => {
+      categories.add(attempt.category);
+    });
+  });
+  
+  return Array.from(categories).sort();
 };
 
 // Initialize with some sample data if no users exist
