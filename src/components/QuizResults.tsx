@@ -7,7 +7,7 @@ import { feedbackService } from '@/lib/services/feedbackService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
-import { CheckCircle, XCircle, Target, TrendingUp, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Target, TrendingUp, Clock, Share2 } from 'lucide-react';
 
 interface QuizResultsProps {
   score: number;
@@ -42,6 +42,31 @@ const QuizResults = ({ score, totalQuestions, onRestart, isSaving, timeTaken, ca
   const handleFeedbackSubmit = (feedback: FeedbackData) => {
     feedbackService.saveFeedback(feedback);
     setShowFeedbackModal(false);
+  };
+
+  const handleShare = async () => {
+    const shareData = {
+      title: 'Quiz Results - QuizMaster',
+      text: `I just scored ${percentage}% (${correctAnswers}/${totalQuestions}) on a ${category || 'General'} quiz! ${performance.level} performance! 🎯`,
+      url: window.location.origin
+    };
+
+    // Check if Web Share API is supported
+    if (navigator.share && navigator.canShare(shareData)) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        console.log('Error sharing:', err);
+      }
+    } else {
+      // Fallback to social media URLs
+      const text = encodeURIComponent(shareData.text);
+      const url = encodeURIComponent(shareData.url);
+      
+      // Twitter share URL
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${text}&url=${url}`;
+      window.open(twitterUrl, '_blank', 'width=550,height=420');
+    }
   };
 
   return (
@@ -186,6 +211,14 @@ const QuizResults = ({ score, totalQuestions, onRestart, isSaving, timeTaken, ca
                 </Button>
               </Link>
             )}
+            <Button
+              variant="outline"
+              onClick={handleShare}
+              className="flex items-center gap-2"
+            >
+              <Share2 className="w-4 h-4" />
+              Share Score
+            </Button>
             <Button
               variant="outline"
               onClick={() => setShowFeedbackModal(true)}
